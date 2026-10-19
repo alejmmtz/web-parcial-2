@@ -1,0 +1,70 @@
+# Copiar las peticiones a Postman. No requiere una extensión del editor.
+# Obtener IDs reales desde los GET antes de utilizar los ejemplos.
+
+### Ya funciona: estado de la aplicación
+GET http://localhost:3003/api
+
+### Ya funciona: salas
+GET http://localhost:3003/api/rooms
+
+### Ya funciona: reservas
+GET http://localhost:3003/api/reservations
+
+### Ya funciona: reserva por ID; sustituir el 1 por un ID existente
+GET http://localhost:3003/api/reservations/1
+
+### Después del bloque 1: creación válida, 201; cambiar roomId
+POST http://localhost:3003/api/reservations
+Content-Type: application/json
+
+{
+  "purpose": "Project planning",
+  "participants": 6,
+  "roomId": 1
+}
+
+### Después del bloque 1: texto en vez de número, 400
+POST http://localhost:3003/api/reservations
+Content-Type: application/json
+
+{
+  "purpose": "Invalid participants",
+  "participants": "6",
+  "roomId": 1
+}
+
+### Después del bloque 1: estado enviado por el cliente, 400
+POST http://localhost:3003/api/reservations
+Content-Type: application/json
+
+{
+  "purpose": "Invalid extra property",
+  "participants": 6,
+  "roomId": 1,
+  "status": "cancelled"
+}
+
+### Después del bloque 1: sala inexistente, 404
+POST http://localhost:3003/api/reservations
+Content-Type: application/json
+
+{
+  "purpose": "Unknown room",
+  "participants": 6,
+  "roomId": 999999999
+}
+
+### Después del bloque 2: cambiar el ID por una reserva activa; sin body
+PATCH http://localhost:3003/api/reservations/1/cancel
+
+### Después de cancelar: consultar el mismo ID para comprobar que se guardó
+GET http://localhost:3003/api/reservations/1
+
+### Después del bloque 2: repetir para la misma reserva, ahora debe devolver 409
+PATCH http://localhost:3003/api/reservations/1/cancel
+
+### Después del bloque 2: ID inválido, 400
+PATCH http://localhost:3003/api/reservations/abc/cancel
+
+### Después del bloque 2: reserva inexistente, 404
+PATCH http://localhost:3003/api/reservations/999999999/cancel

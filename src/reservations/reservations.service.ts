@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException, NotImplementedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { RoomEntity } from '../rooms/entities/room.entity';
-import { CreateReservationDto } from './dto/create-reservation.dto';
-import { ReservationEntity } from './entities/reservation.entity';
-import { ReservationRulesService } from './reservation-rules.service';
+import {
+  Injectable,
+  NotFoundException,
+  NotImplementedException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { RoomEntity } from "../rooms/entities/room.entity";
+import { CreateReservationDto } from "./dto/create-reservation.dto";
+import { ReservationEntity } from "./entities/reservation.entity";
+import { ReservationRulesService } from "./reservation-rules.service";
 
 @Injectable()
 export class ReservationsService {
@@ -14,22 +18,27 @@ export class ReservationsService {
     @InjectRepository(RoomEntity)
     private readonly roomsRepository: Repository<RoomEntity>,
     // TODO 2: Inject ReservationRulesService through this constructor.
+    private readonly reservationRulesService: ReservationRulesService,
   ) {}
 
   async cancel(id: number): Promise<ReservationEntity> {
     // TODO 2: Coordinate the operation according to the examination.
-    throw new NotImplementedException('TODO 2: implement cancellation');
+    const reservation = await this.findOne(id);
+    this.reservationRulesService.ensureCanCancel(reservation);
+    reservation.status = "cancelled";
+
+    return this.reservationsRepository.save(reservation);
   }
 
   // The methods below are completed. Do not change them.
   async create(dto: CreateReservationDto): Promise<ReservationEntity> {
     const room = await this.roomsRepository.findOneBy({ id: dto.roomId });
-    if (!room) throw new NotFoundException('Room was not found');
+    if (!room) throw new NotFoundException("Room was not found");
 
     const reservation = this.reservationsRepository.create({
       purpose: dto.purpose,
       participants: dto.participants,
-      status: 'active',
+      status: "active",
       room,
     });
     return this.reservationsRepository.save(reservation);
@@ -38,7 +47,7 @@ export class ReservationsService {
   findAll(): Promise<ReservationEntity[]> {
     return this.reservationsRepository.find({
       relations: { room: true },
-      order: { id: 'ASC' },
+      order: { id: "ASC" },
     });
   }
 

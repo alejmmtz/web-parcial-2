@@ -44,6 +44,7 @@ describe("ReservationsService", () => {
   });
 
   it("cancels an active reservation and returns the saved result", async () => {
+    // Arrange
     const reservation = {
       id: 7,
       purpose: "Project planning",
@@ -60,7 +61,10 @@ describe("ReservationsService", () => {
     reservationsRepositoryMock.findOne.mockResolvedValue(reservation);
     reservationsRepositoryMock.save.mockResolvedValue(savedReservation);
 
+    //Act
     const result = await service.cancel(7);
+
+    //Assert
     expect(result).toBe(savedReservation);
     expect(reservationRulesServiceMock.ensureCanCancel(reservation))
       .toHaveBeenCalled;
@@ -73,6 +77,7 @@ describe("ReservationsService", () => {
   });
 
   it("does not change or save a reservation when the rule rejects cancellation", async () => {
+    // Arrange
     const reservation = {
       id: 9,
       purpose: "Team review",
@@ -88,6 +93,7 @@ describe("ReservationsService", () => {
 
     reservationsRepositoryMock.findOne.mockResolvedValue(reservation);
 
+    //Act & Assert
     // Check the exception, the unchanged state, and the absence of a save() call.
     expect(() => service.cancel(9)).rejects.toBeInstanceOf(ConflictException);
     expect((await service.findOne(9)).status).toBe("active");

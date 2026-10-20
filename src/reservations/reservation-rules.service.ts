@@ -10,7 +10,11 @@ export class ReservationRulesService {
   ensureCanCancel(reservation: ReservationEntity): void {
     // TODO 2: Implement the cancellation rule. Do not modify or save the reservation here.
     if (reservation.status == "cancelled") {
-      throw new ConflictException("Reservation must be active to cancel it");
+      throw new ConflictException(
+        "Reservation with purpose '" +
+          reservation.purpose +
+          "' is already cancelled, a reservation must be active to cancel it",
+      );
     }
   }
 }

@@ -66,8 +66,7 @@ describe("ReservationsService", () => {
 
     //Assert
     expect(result).toBe(savedReservation);
-    expect(reservationRulesServiceMock.ensureCanCancel(reservation))
-      .toHaveBeenCalled;
+    expect(reservationRulesServiceMock.ensureCanCancel).toHaveBeenCalled;
 
     expect(reservationsRepositoryMock.save).toHaveBeenCalledWith(
       expect.objectContaining({

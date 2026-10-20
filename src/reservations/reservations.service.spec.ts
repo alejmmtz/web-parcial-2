@@ -13,14 +13,15 @@ describe("ReservationsService", () => {
     findOne: jest.fn<(options: any) => Promise<ReservationEntity | null>>(),
     find: jest.fn<(options: any) => Promise<ReservationEntity | null>>(),
     create: jest.fn(),
-    save: jest.fn(),
+    save: jest.fn<(options: any) => Promise<ReservationEntity | null>>(),
   };
-  let roomsRepositoryMock: { findOneBy: jest.Mock };
-  let reservationRulesServiceMock: { ensureCanCancel: jest.Mock };
+  let roomsRepositoryMock = { findOneBy: jest.fn() };
+  let reservationRulesServiceMock = {
+    ensureCanCancel: jest.fn<(options: any) => ConflictException | null>(),
+  };
 
   beforeEach(async () => {
-    roomsRepositoryMock = { findOneBy: jest.fn() };
-    reservationRulesServiceMock = { ensureCanCancel: jest.fn() };
+    jest.clearAllMocks();
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -57,8 +58,18 @@ describe("ReservationsService", () => {
 
     // TODO TEST 2: Arrange dependencies, call cancel(7), and check the required behavior.
     reservationsRepositoryMock.findOne.mockResolvedValue(reservation);
+    reservationsRepositoryMock.save.mockResolvedValue(savedReservation);
 
-    throw new Error("TODO TEST 2: complete the successful cancellation test");
+    const result = await service.cancel(7);
+    expect(result).toBe(savedReservation);
+    expect(reservationRulesServiceMock.ensureCanCancel(reservation))
+      .toHaveBeenCalled;
+
+    expect(reservationsRepositoryMock.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "cancelled",
+      }),
+    );
   });
 
   it("does not change or save a reservation when the rule rejects cancellation", async () => {
@@ -71,7 +82,15 @@ describe("ReservationsService", () => {
     } as ReservationEntity;
 
     // TODO TEST 3: Make the mock rule reject this ACTIVE reservation, as requested.
+    reservationRulesServiceMock.ensureCanCancel.mockImplementation(() => {
+      throw new ConflictException("Reservation must be active to cancel it");
+    });
+
+    reservationsRepositoryMock.findOne.mockResolvedValue(reservation);
+
     // Check the exception, the unchanged state, and the absence of a save() call.
-    throw new Error("TODO TEST 3: complete the rejected cancellation test");
+    expect(() => service.cancel(9)).rejects.toBeInstanceOf(ConflictException);
+    expect((await service.findOne(9)).status).toBe("active");
+    expect(reservationsRepositoryMock.save).not.toHaveBeenCalled();
   });
 });
